@@ -54,7 +54,8 @@ function senderJid(msg: WAMessage): string {
 
 function senderPhone(msg: WAMessage): string {
   const jid = senderJid(msg)
-  return normalizePhone(String(jid).split('@')[0].split(':')[0])
+  const localPart = String(jid).split('@')[0] || ''
+  return normalizePhone(localPart.split(':')[0] || '')
 }
 
 async function streamToBuffer(stream: AsyncIterable<Uint8Array>): Promise<Buffer> {
