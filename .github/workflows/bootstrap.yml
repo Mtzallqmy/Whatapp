@@ -1,0 +1,30 @@
+name: Bootstrap project
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Expand project snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f bootstrap.part.00
+          cat bootstrap.part.* | tr -d '\n\r' | base64 --decode > /tmp/project.tar.gz
+          tar -xzf /tmp/project.tar.gz
+          rm -f bootstrap.part.* .github/workflows/bootstrap.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "feat: complete WhatsApp AI Gateway"
+          git push origin HEAD:main
