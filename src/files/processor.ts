@@ -1,10 +1,13 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import mammoth from 'mammoth'
-import pdfParse from 'pdf-parse'
 import { config } from '../config.js'
+
+const require = createRequire(import.meta.url)
+const pdfParse = require('pdf-parse/lib/pdf-parse.js') as (data: Buffer) => Promise<{ text?: string }>
 
 const allowedDocumentMime = new Set([
   'application/pdf',
