@@ -37,19 +37,37 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Production dependency audit
+        run: npm audit --omit=dev || true
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
       - run: npm run build
       - name: Start application and test health
         run: |
+          set -euo pipefail
           npm start > /tmp/wa-gateway.log 2>&1 &
           APP_PID=$!
-          trap 'kill $APP_PID || true' EXIT
+          cleanup() { kill "$APP_PID" 2>/dev/null || true; }
+          trap cleanup EXIT
+          healthy=0
           for i in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/health > /tmp/health.json; then break; fi
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              echo "Application exited before becoming healthy"
+              cat /tmp/wa-gateway.log
+              exit 1
+            fi
+            if curl --fail --silent http://127.0.0.1:3000/health > /tmp/health.json; then
+              healthy=1
+              break
+            fi
             sleep 1
           done
+          if [ "$healthy" -ne 1 ]; then
+            echo "Health endpoint did not become ready"
+            cat /tmp/wa-gateway.log
+            exit 1
+          fi
           cat /tmp/health.json
           grep '"status":"ok"' /tmp/health.json
           grep '"database":"connected"' /tmp/health.json
