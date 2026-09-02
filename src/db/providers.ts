@@ -21,8 +21,19 @@ function categoryFor(type: ProviderType): ProviderCategory {
 }
 
 function sanitizeProvider(row: ProviderRecord) {
-  const { encrypted_key: _encrypted, ...safe } = row
-  return safe
+  return {
+    id: row.id,
+    type: row.type,
+    category: row.category,
+    name: row.name,
+    key_hint: row.key_hint,
+    base_url: row.base_url,
+    config: row.config,
+    enabled: row.enabled,
+    is_default: row.is_default,
+    created_at: row.created_at,
+    updated_at: row.updated_at
+  }
 }
 
 export async function listProviders() {
