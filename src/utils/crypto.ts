@@ -36,7 +36,11 @@ export function decryptSecret(payload: string): string {
 export function maskSecret(value: string): string {
   const clean = value.trim()
   if (clean.length <= 8) return `••••${clean.slice(-4)}`
-  const prefixLength = Math.min(8, Math.max(3, clean.indexOf('-') + 1))
+  const firstDash = clean.indexOf('-')
+  const secondDash = firstDash >= 0 ? clean.indexOf('-', firstDash + 1) : -1
+  const prefixLength = secondDash >= 0
+    ? Math.min(secondDash + 1, 12)
+    : firstDash >= 0 ? Math.min(firstDash + 1, 8) : Math.min(4, clean.length - 4)
   return `${clean.slice(0, prefixLength)}••••••••••${clean.slice(-4)}`
 }
 
