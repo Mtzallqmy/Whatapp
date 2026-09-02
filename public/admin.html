@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>WhatsApp AI Gateway</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <section id="loginView" class="login-shell hidden">
+    <form id="loginForm" class="login-card card">
+      <div class="logo-mark">WA</div>
+      <h1>بوابة واتساب الذكية</h1>
+      <p class="muted">لوحة إدارة خاصة ومحمية.</p>
+      <label class="field"><span>كلمة مرور الأدمن</span><input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary wide" type="submit">دخول</button>
+      <div id="loginError" class="notice danger hidden"></div>
+    </form>
+  </section>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo-mark small">WA</div><div><strong>AI Gateway</strong><small>لوحة الإدارة</small></div></div>
+      <nav id="nav" class="nav">
+        <button data-tab="dashboard" class="nav-item active">الرئيسية</button>
+        <button data-tab="whatsapp" class="nav-item">واتساب</button>
+        <button data-tab="users" class="nav-item">المستخدمون</button>
+        <button data-tab="providers" class="nav-item">المزودون</button>
+        <button data-tab="settings" class="nav-item">النماذج والإعدادات</button>
+      </nav>
+      <button id="logoutBtn" class="btn ghost wide">تسجيل الخروج</button>
+    </aside>
+
+    <main class="content">
+      <header class="page-head">
+        <div><h1 id="pageTitle">الرئيسية</h1><p class="muted">إدارة البوت والاستخدام والمزودين من مكان واحد.</p></div>
+        <div id="headerWaStatus" class="status-badge"><span class="dot"></span><span>غير متصل</span></div>
+      </header>
+
+      <section data-panel="dashboard" class="panel active">
+        <div class="stats-grid">
+          <article class="stat card"><span>حالة واتساب</span><strong id="dashWa">—</strong><small id="dashNumber">غير مرتبط</small></article>
+          <article class="stat card"><span>المستخدمون</span><strong id="statUsers">0</strong><small>Whitelist</small></article>
+          <article class="stat card"><span>طلبات اليوم</span><strong id="statRequests">0</strong><small>كل الوظائف</small></article>
+          <article class="stat card"><span>استهلاك اليوم</span><strong id="statTokens">0</strong><small>Input + Output tokens</small></article>
+          <article class="stat card"><span>عمليات البحث</span><strong id="statSearches">0</strong><small>اليوم</small></article>
+          <article class="stat card"><span>الصور المولدة</span><strong id="statImages">0</strong><small>اليوم</small></article>
+          <article class="stat card"><span>الملفات</span><strong id="statFiles">0</strong><small>اليوم</small></article>
+          <article class="stat card accent"><span>تكلفة APIs التقديرية</span><strong id="statCost">$0.0000</strong><small>بحسب أسعار المزود المحفوظة</small></article>
+        </div>
+        <div class="card info-card">
+          <h2>حالة النظام</h2>
+          <p>الطلبات من أرقام غير موجودة في Whitelist لا تصل إلى نماذج الذكاء الاصطناعي. يمكنك تغيير سلوك الرد عليها من الإعدادات.</p>
+          <button class="btn secondary" data-go="whatsapp">إدارة اتصال واتساب</button>
+        </div>
+      </section>
+
+      <section data-panel="whatsapp" class="panel">
+        <div class="two-col">
+          <article class="card">
+            <div class="section-head"><div><h2>الاتصال</h2><p class="muted">جلسة Baileys محفوظة في Persistent Volume.</p></div><div id="waStatus" class="status-badge"><span class="dot"></span><span>غير متصل</span></div></div>
+            <div class="wa-number"><span>الرقم المرتبط</span><strong id="waNumber" dir="ltr">—</strong></div>
+            <div class="button-row">
+              <button id="connectWa" class="btn primary">Connect</button>
+              <button id="reconnectWa" class="btn secondary">Reconnect</button>
+              <button id="logoutWa" class="btn danger">Logout وحذف Session</button>
+            </div>
+            <div class="path-box" dir="ltr">/data/whatsapp</div>
+          </article>
+          <article class="card qr-card">
+            <h2>QR Code</h2>
+            <img id="qr" class="qr hidden" alt="WhatsApp QR Code">
+            <div id="qrEmpty" class="empty">اضغط Connect. إذا لم توجد جلسة صالحة سيظهر QR هنا.</div>
+            <p class="muted">واتساب ← الأجهزة المرتبطة ← ربط جهاز</p>
+          </article>
+        </div>
+      </section>
+
+      <section data-panel="users" class="panel">
+        <div class="card">
+          <div class="section-head"><div><h2 id="userFormTitle">إضافة مستخدم</h2><p class="muted">الأرقام بصيغة دولية بدون +.</p></div><button id="clearUserForm" class="btn ghost">جديد</button></div>
+          <form id="userForm" class="form-grid">
+            <input id="userId" type="hidden">
+            <label class="field"><span>الاسم</span><input id="userName" maxlength="100" placeholder="محمد"></label>
+            <label class="field"><span>رقم WhatsApp</span><input id="userPhone" dir="ltr" inputmode="tel" required placeholder="9677xxxxxxx"></label>
+            <label class="field"><span>Role</span><select id="userRole"><option value="user">User</option><option value="admin">Admin</option></select></label>
+            <label class="field"><span>الحالة</span><select id="userEnabled"><option value="true">مفعّل</option><option value="false">معطّل</option></select></label>
+            <label class="field"><span>Daily Limit</span><input id="userDaily" type="number" min="1" value="100" required></label>
+            <label class="field"><span>Monthly Limit (اختياري)</span><input id="userMonthly" type="number" min="1" placeholder="بدون حد شهري"></label>
+            <div class="field span2"><span>الصلاحيات</span><div class="checks">
+              <label><input id="permChat" type="checkbox" checked> Chat</label>
+              <label><input id="permSearch" type="checkbox" checked> Search</label>
+              <label><input id="permImages" type="checkbox" checked> Images / Vision</label>
+              <label><input id="permFiles" type="checkbox"> Files</label>
+            </div></div>
+            <div class="form-actions span2"><button class="btn primary" type="submit">حفظ المستخدم</button></div>
+          </form>
+        </div>
+        <div class="card table-card"><div class="section-head"><h2>Whitelist</h2><span id="usersCount" class="muted">0 مستخدم</span></div><div id="usersList" class="list"></div></div>
+      </section>
+
+      <section data-panel="providers" class="panel">
+        <div class="card">
+          <div class="section-head"><div><h2 id="providerFormTitle">إضافة مزود</h2><p class="muted">المفتاح يُشفّر قبل حفظه، ولن يظهر كاملًا مرة أخرى.</p></div><button id="clearProviderForm" class="btn ghost">جديد</button></div>
+          <form id="providerForm" class="form-grid">
+            <input id="providerId" type="hidden">
+            <label class="field"><span>النوع</span><select id="providerType">
+              <optgroup label="AI"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="openrouter">OpenRouter</option><option value="anthropic">Anthropic (مستقبلي)</option></optgroup>
+              <optgroup label="Search"><option value="tavily">Tavily</option><option value="serper">Serper</option><option value="brave">Brave Search</option></optgroup>
+            </select></label>
+            <label class="field"><span>الاسم</span><input id="providerName" required placeholder="OpenAI الرئيسي"></label>
+            <label class="field"><span>API Key</span><input id="providerKey" type="password" dir="ltr" autocomplete="new-password" placeholder="اتركه فارغًا عند التعديل للاحتفاظ بالمفتاح"></label>
+            <label class="field"><span>Base URL (اختياري)</span><input id="providerBaseUrl" type="url" dir="ltr" placeholder="https://..."></label>
+            <label class="field"><span>الحالة</span><select id="providerEnabled"><option value="true">مفعّل</option><option value="false">معطّل</option></select></label>
+            <label class="field"><span>افتراضي ضمن فئته</span><select id="providerDefault"><option value="false">لا</option><option value="true">نعم</option></select></label>
+            <label class="field"><span>سعر Input / 1M tokens ($)</span><input id="priceInput" type="number" min="0" step="0.000001" value="0"></label>
+            <label class="field"><span>سعر Output / 1M tokens ($)</span><input id="priceOutput" type="number" min="0" step="0.000001" value="0"></label>
+            <label class="field"><span>سعر الصورة ($)</span><input id="priceImage" type="number" min="0" step="0.000001" value="0"></label>
+            <label class="field"><span>سعر طلب البحث ($)</span><input id="priceRequest" type="number" min="0" step="0.000001" value="0"></label>
+            <label class="field"><span>Default Chat Model (اختياري)</span><input id="providerChatModel" dir="ltr" placeholder="fallback"></label>
+            <label class="field"><span>Default Vision Model (اختياري)</span><input id="providerVisionModel" dir="ltr" placeholder="fallback"></label>
+            <label class="field"><span>Default Image Model (اختياري)</span><input id="providerImageModel" dir="ltr" placeholder="fallback"></label>
+            <div class="form-actions span2"><button class="btn primary" type="submit">حفظ المزود</button></div>
+          </form>
+        </div>
+        <div class="card table-card"><div class="section-head"><h2>المزودون</h2><span class="muted">AI + Search</span></div><div id="providersList" class="list"></div></div>
+      </section>
+
+      <section data-panel="settings" class="panel">
+        <form id="settingsForm">
+          <div class="card">
+            <div class="section-head"><div><h2>النماذج الافتراضية</h2><p class="muted">لا يوجد اسم موديل ثابت داخل منطق WhatsApp؛ كل وظيفة تُضبط هنا.</p></div></div>
+            <div id="modelRoutes" class="routes-grid"></div>
+            <div class="route-row"><div><strong>Search Provider</strong><small>مزود نتائج الإنترنت</small></div><select id="searchProviderRoute"></select><div class="muted">Tavily / Serper / Brave</div></div>
+          </div>
+          <div class="card settings-card">
+            <h2>الأرقام غير المصرح لها</h2>
+            <div class="form-grid">
+              <label class="field"><span>السلوك</span><select id="unauthorizedBehavior"><option value="ignore">تجاهل</option><option value="message">إرسال رسالة قصيرة</option></select></label>
+              <label class="field"><span>رسالة الخدمة الخاصة</span><input id="unauthorizedMessage" maxlength="500"></label>
+            </div>
+            <button class="btn primary" type="submit">حفظ الإعدادات</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+  <script src="/admin.js" defer></script>
+</body>
+</html>

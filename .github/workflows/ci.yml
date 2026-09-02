@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: whatsapp_ai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d whatsapp_ai"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/whatsapp_ai
+      DATABASE_SSL: "false"
+      ADMIN_PASSWORD: ci-admin-password-only
+      APP_ENCRYPTION_KEY: ci-encryption-key-that-is-longer-than-32-characters
+      COOKIE_SECRET: ci-cookie-secret-that-is-longer-than-32-characters
+      WHATSAPP_AUTH_DIR: /tmp/whatsapp-ai-ci
+      WHATSAPP_AUTO_START: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Start application and test health
+        run: |
+          npm start > /tmp/wa-gateway.log 2>&1 &
+          APP_PID=$!
+          trap 'kill $APP_PID || true' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/health > /tmp/health.json; then break; fi
+            sleep 1
+          done
+          cat /tmp/health.json
+          grep '"status":"ok"' /tmp/health.json
+          grep '"database":"connected"' /tmp/health.json
+          cat /tmp/wa-gateway.log
+      - name: Docker build
+        run: docker build -t whatsapp-ai-gateway:ci .

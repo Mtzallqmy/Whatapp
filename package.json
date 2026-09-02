@@ -1,0 +1,44 @@
+{
+  "name": "whatsapp-ai-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private WhatsApp AI gateway using Baileys, PostgreSQL and a configurable multi-provider AI router.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "db:migrate": "tsx src/db/migrate-cli.ts"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "6.7.24",
+    "cookie-parser": "1.4.7",
+    "express": "5.2.1",
+    "express-rate-limit": "8.1.0",
+    "helmet": "8.1.0",
+    "mammoth": "1.10.0",
+    "pdf-parse": "1.1.1",
+    "pg": "8.16.3",
+    "pino": "9.9.0",
+    "qrcode": "1.5.4",
+    "zod": "4.1.5"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.9",
+    "@types/express": "5.0.3",
+    "@types/node": "24.3.0",
+    "@types/pdf-parse": "1.1.5",
+    "@types/pg": "8.15.5",
+    "@types/qrcode": "1.5.5",
+    "eslint": "9.34.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.42.0"
+  }
+}
