@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+try {
+  process.loadEnvFile()
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().max(65535).default(3000),
